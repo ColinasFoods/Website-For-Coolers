@@ -1,4 +1,9 @@
 class CoolerSensor {
-    constructor(id, temp, doorOpen)
-    // constructor(id, temp, doorOpen, doorTimeOpen)
+    constructor(id, temp, doorOpen, doorTimeOpen) {
+        this.id = id;
+        this.temp = temp;
+        this.doorOpen = doorOpen;
+        this.doorTimeOpen = doorTimeOpen;
+    }
+    
 }
