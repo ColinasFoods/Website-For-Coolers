@@ -33,3 +33,4 @@ fetch('http://localhost:3000/temperature' )
     
     });
     
+console.log(sensorMap)
