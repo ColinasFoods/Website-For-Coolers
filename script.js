@@ -1,9 +1,16 @@
 var data;
 
+var sensorMap = new Map();
+
 fetch('http://localhost:3000/temperature' )
     .then((response) => response.json())
     .then((json) => {
         data = json;
-        console.log(Object.values(data[0][0]));
+        Object.values(data).forEach(element => {
+            var temp = Object.values(element);
+            
+            sensorMap.set(temp[0], new CoolerSensor(temp[0], temp[1], temp[2], temp[3]))
+        });
     });
-
+    
+console.log(sensorMap)
