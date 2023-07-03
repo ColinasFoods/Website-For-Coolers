@@ -1,0 +1,15 @@
+{
+  "name": "website-for-coolers",
+  "version": "1.0.0",
+  "description": "website for coolers",
+  "main": "script.js",
+  "scripts": {
+    "test": "script.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ColinasFoods/Website-For-Coolers/blob/main/README.md"
+  },
+  "author": "",
+  "license": "ISC"
+}
