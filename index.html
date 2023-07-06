@@ -1,179 +1,156 @@
 <!DOCTYPE html>
 <html>
 <head>
-
-    <script> var data;
-
-        var sensorMap = new Map();
-        
-        fetch('http://localhost:3000/temperature' )
-            .then((response) => response.json())
-            .then((json) => {
-                data = json;
-                Object.values(data).forEach(element => {
-                    var temp = Object.values(element);
-                    
-                    sensorMap.set(temp[0], new CoolerSensor(temp[1], temp[2], temp[3], temp[4], temp[5]))
-                    
-                 
-                });
-                const cooler1 = sensorMap.get("64a5957082a0dadb53cdebb6")
-                const cooler2 = sensorMap.get("64a5c6d33120c2441148a755")
-                const cooler3 = sensorMap.get("64a5c70a3120c2441148a757")
-                const cooler4 = sensorMap.get("64a5c7333120c2441148a759")
-              
-                console.log(cooler1.temp);
-                console.log(cooler2.temp);
-                console.log(cooler3.temp);
-                console.log(cooler4.temp);
-        
-            function getCoolerTemp(id){
-                    cooler = sensorMap.get(id);
-                    console.log(cooler.temp)
-            }
-            getCoolerTemp("64a5c7333120c2441148a759")
-                
-            function randomArray(){
-                return ["0", 4, 5, 3, 1]
-            }
-            
-            });
-            </script>
-            
-    <script src="script.js"></script>
-    <script src="https://cdn.anychart.com/releases/8.11.0/js/anychart-base.min.js"></script>
-    <script src="CoolerSensor.js"></script>
     <title>Cooler Information</title>
     <style type="text/css">
-        #container {
+        canvas {
             width: 100%;
             height: 35rem;
-            margin: 0;
-            padding: 0;
         }
     </style>
 </head>
 <body>
     <h1 style="text-align: center;">
         Data
-
     </h1>
-    <h3 align= "left" vaglin= "middle" style="margin-left: 2rem; margin-right: auto;">
+    <h3 align="left" vaglin="middle" style="margin-left: 2rem; margin-right: auto;">
         Cooler One
-        <h4 style="margin-left: 0rem;"> Temperature : </h4>
+        <h4 style="margin-left: 0rem;">Temperature: <span id="cooler1Temp"></span></h4>
     </h3>
 
-    <h3 align= "left" vaglin= "middle" style="margin-left: 2rem;">
+    <h3 align="left" vaglin="middle" style="margin-left: 2rem;">
         Cooler Two
-        <h4 style="margin-left: 0rem;"> Temperature:</h4>
+        <h4 style="margin-left: 0rem;">Temperature: <span id="cooler2Temp"></span></h4>
     </h3>
 
-    <h3 align= "left" vaglin= "middle" style="margin-left: 2rem; margin-right: auto;">
+    <h3 align="left" vaglin="middle" style="margin-left: 2rem; margin-right: auto;">
         Cooler 3
-        <h4 style="margin-left: 0rem;">Temperature:</h4>
+        <h4 style="margin-left: 0rem;">Temperature: <span id="cooler3Temp"></span></h4>
     </h3>
 
-    <h3 align= "left" vaglin= "middle" style="margin-left: 2rem; margin-right: auto;">
+    <h3 align="left" vaglin="middle" style="margin-left: 2rem; margin-right: auto;">
         Freezer
-        <h4 style="margin-left: 0rem;">Temperature:</h4>
+        <h4 style="margin-left: 0rem;">Temperature: <span id="freezerTemp"></span></h4>
     </h3>
 
-    <ul> </ul>
-
-    <div id="container"></div>
+    <canvas id="chartContainer"></canvas>
+    <script src = "CoolerSensor.js"> </script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.5.1/dist/chart.js"></script>
+    <script src="https://cdn.anychart.com/releases/8.11.0/js/anychart-base.min.js"></script>
     <script>
-        anychart.onDocumentReady(function () {
+        var data;
+        var sensorMap = new Map();
+fetch('http://localhost:3000/temperature')
+    .then((response) => response.json())
+    .then((json) => {
+        console.log(json); // Log the received data to the console
 
-            // add data
-            var data = [
-                randomArray,
-                ["2004", 4, 0, 0, 8],
-                ["2005", 6, 0, 0, 2],
-                ["2006", 9, 1, 0, 10],
-                ["2007", 12, 2, 0, 7],
-                ["2008", 13, 5, 1, 0],
-                ["2009", 15, 6, 1, 2],
-                ["2010", 16, 9, 1, 0],
-                ["2011", 16, 10, 4, 0],
-                ["2012", 17, 11, 5, 0],
-                ["2013", 17, 13, 6, 0],
-                ["2014", 17, 14, 7 ,2 ],
-                ["2015", 17, 14, 10, 25],
-                ["2016", 17, 14, 12, 12],
-                ["2017", 19, 16, 12, 16],
-                ["2018", 20, 17, 14, 20],
-                ["2019", 20, 19, 16, 18],
-                ["2020", 20, 20, 17, 15],
-                ["2021", 20, 20, 20, 30],
-                ["2022", 20, 22, 20, 35]
-            ];
+        data = json;
+        Object.values(data).forEach(element => {
+            var temp = Object.values(element);
+          
+            sensorMap.set(temp[0], new CoolerSensor(temp[1], temp[2], temp[3], temp[4] , temp[5]))
+        })
 
-            // create a data set
-            var dataSet = anychart.data.set(data);
+        var cooler1Sensor = sensorMap.get("64a5957082a0dadb53cdebb6");
+        var cooler2Sensor = sensorMap.get("64a5c6d33120c2441148a755");
+        var cooler3Sensor = sensorMap.get("64a5c70a3120c2441148a757");
+        var freezerSensor = sensorMap.get("64a5c7333120c2441148a759");
 
-            // map the data for all series
-            var firstSeriesData = dataSet.mapAs({ x: 0, value: 1 });
-            var secondSeriesData = dataSet.mapAs({ x: 0, value: 2 });
-            var thirdSeriesData = dataSet.mapAs({ x: 0, value: 3 });
-            var fourthSeriesData = dataSet.mapAs({x: 0, value: 4});
+        var cooler1Temps = cooler1Sensor ? [cooler1Sensor.temp] : [];
+        var cooler2Temps = cooler2Sensor ? [cooler2Sensor.temp] : [];
+        var cooler3Temps = cooler3Sensor ? [cooler3Sensor.temp] : [];
+        var freezerTemps = freezerSensor ? [freezerSensor.temp] : [];
 
-            // create a line chart
-            var chart = anychart.line();
+        console.log(cooler1Temps); // Log the Cooler 1 temperature values to the console
+        console.log(cooler2Temps); // Log the Cooler 2 temperature values to the console
+        console.log(cooler3Temps); // Log the Cooler 3 temperature values to the console
+        console.log(freezerTemps); // Log the Freezer temperature values to the console
 
-            // create the series and name them
-            var firstSeries = chart.line(firstSeriesData);
-            firstSeries.name("Cooler 1");
-            var secondSeries = chart.line(secondSeriesData);
-            secondSeries.name("Cooler 2");
-            var thirdSeries = chart.line(thirdSeriesData);
-            thirdSeries.name("Cooler 3");
-            var fourthSeries = chart.line(fourthSeriesData);
-            fourthSeries.name("Freezer");
+        // Update the HTML elements with temperature values
+        document.getElementById("cooler1Temp").innerText = cooler1Temps.join(", ") || "N/A";
+        document.getElementById("cooler2Temp").innerText = cooler2Temps.join(", ") || "N/A";
+        document.getElementById("cooler3Temp").innerText = cooler3Temps.join(", ") || "N/A";
+        document.getElementById("freezerTemp").innerText = freezerTemps.join(", ") || "N/A";
 
-            // add a legend and customize it
-            chart.legend().enabled(true).fontSize(14).padding([10, 0, 10, 0]);
-
-            // add a title and customize it
-            chart
-                .title()
-                .enabled(true)
-                .useHtml(true)
-                .text(
-                    '<span style="color: #006331; font-size:20px;">Cooler Tempatures</span>' +
-                    '<br/><span style="font-size: 16px;">(Live Data)</span>'
-                );
-
-            // name the axes
-            chart.yAxis().title("Tempature (°C)");
-            chart.xAxis().title("Time");
-
-            // customize the series markers
-            firstSeries.hovered().markers().type("circle").size(4);
-            secondSeries.hovered().markers().type("circle").size(4);
-            thirdSeries.hovered().markers().type("circle").size(4);
-            fourthSeries.hovered().markers().type("circle").size(4);
-
-            // turn on crosshairs and remove the y hair
-            chart.crosshair().enabled(true).yStroke(null).yLabel(false);
-
-            // change the tooltip position
-            chart.tooltip().positionMode("point");
-            chart.tooltip().position("right").anchor("left-center").offsetX(5).offsetY(5);
-
-            // customize the series stroke in the normal state
-            firstSeries.normal().stroke("#7b60a2", 2.5);
-            secondSeries.normal().stroke("#db7346", 2.5);
-            thirdSeries.normal().stroke("#43a7dc", 2.5);
-            fourthSeries.normal().stroke("#029A00", 2.5);
-
-            // specify where to display the chart
-            chart.container("container");
-
-            // draw the resulting chart
-            chart.draw();
-
+        // Create a line chart using Chart.js
+        var ctx = document.getElementById('chartContainer').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: data.map(cooler => cooler.time), // Assuming time represents the x-axis values
+                datasets: [
+                    {
+                        label: 'Cooler 1',
+                        data: cooler1Temps,
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Cooler 2',
+                        data: cooler2Temps,
+                        backgroundColor: 'rgba(192, 75, 75, 0.2)',
+                        borderColor: 'rgba(192, 75, 75, 1)',
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Cooler 3',
+                        data: cooler3Temps,
+                        backgroundColor: 'rgba(192, 192, 75, 0.2)',
+                        borderColor: 'rgba(192, 192, 75, 1)',
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Freezer',
+                        data: freezerTemps,
+                        backgroundColor: 'rgba(75, 75, 192, 0.2)',
+                        borderColor: 'rgba(75, 75, 192, 1)',
+                        borderWidth: 1
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    x: {
+                        display: true,
+                        title: {
+                            display: true,
+                            text: 'Time'
+                        }
+                    },
+                    y: {
+                        display: true,
+                        title: {
+                            display: true,
+                            text: 'Temperature (°C)'
+                        }
+                    }
+                },
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Cooler Temperatures',
+                        font: {
+                            size: 20
+                        }
+                    }
+                }
+            }
         });
-    </script>
+   
 
+    })
+    .catch((error) => {
+        console.error('Error fetching data:', error);
+    });
+
+
+
+
+            
+            
+    </script>
 </body>
 </html>
