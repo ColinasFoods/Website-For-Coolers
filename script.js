@@ -1,10 +1,11 @@
-var data;
+var data = {};
 
 fetch('http://localhost:3000/temperature')
   .then((response) => response.json())
   .then((json) => {
     data = json;
     var result = [];
+    var sensorMap = new Map();
 
     Object.values(data).forEach(element => {
       var coolerNumber = element.coolerNumber;
@@ -23,7 +24,7 @@ fetch('http://localhost:3000/temperature')
   });
 
 function getCoolerTemp(coolerNumber) {
-  cooler = sensorMap.get(coolerNumber);
+  var cooler = sensorMap.get(coolerNumber);
   if (cooler && cooler.temperature !== undefined) {
     console.log(cooler.temperature);
   } else {
