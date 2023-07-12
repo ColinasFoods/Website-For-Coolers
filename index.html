@@ -65,8 +65,6 @@
 
         var colorMap = new Map();
 
-        var colorMap = new Map();
-
         fetchTemperatureData();
 
         function fetchTemperatureData() {
@@ -152,7 +150,6 @@
                 coolerInfoElement.appendChild(coolerDiv);
             });
         }
-        
 
         function convertToReadableTime(time) {
             const hours = ((time / 3600000) % 24);
@@ -169,7 +166,7 @@
                     datasets: Array.from(coolerTemps.entries()).map(([sensorId, temperatureArray], index) => ({
                         label: `Cooler ${index + 1}`,
                         data: temperatureArray,
-                        backgroundColor: `#${colorMap.get(sensorId).toString(16)}`,
+                        backgroundColor: `#${colorMap.get(sensorMap.get(sensorId).id)}`,
                         borderWidth: 1
                     }))
                 },
