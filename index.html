@@ -63,6 +63,8 @@
         var sensorMap = new Map();
         var coolerTemps = {};
 
+        var colorMap = new Map();
+
         fetchTemperatureData();
 
         function fetchTemperatureData() {
@@ -74,6 +76,8 @@
                     data = json; // Store the data in the data variable
 
                     updateSensorMap(json); // Update the sensor map with the merged data
+
+                    updateColorMap();
 
                     updateTemperatureArrays();
 
@@ -96,6 +100,13 @@
                 sensorMap.set(sensorId, coolerSensor);
                 coolerTemps[sensorId] = [];
             });
+        }
+        
+        function updateColorMap() {
+            colorMap.set("001", 0x0ad0fd);
+            colorMap.set("010", 0x0f00fd);
+            colorMap.set("021", 0x0cf0fd);
+            colorMap.set("031", 0x02f0fd);
         }
 
         function updateTemperatureArrays() {
@@ -135,7 +146,7 @@
                     datasets: Object.entries(coolerTemps).map(([sensorId, temperatureArray], index) => ({
                         label: `Cooler ${index + 1}`,
                         data: temperatureArray,
-                        backgroundColor: `rgba(${getRandomRGBValue()}, ${getRandomRGBValue()}, ${getRandomRGBValue()})`,
+                        backgroundColor: `#${colorMap.get(sensorMap.get(sensorId).id)}`,
                         borderWidth: 1
                     }))
                 },
