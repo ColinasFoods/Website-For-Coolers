@@ -65,6 +65,8 @@
 
         var colorMap = new Map();
 
+        var colorMap = new Map();
+
         fetchTemperatureData();
 
         function fetchTemperatureData() {
@@ -150,6 +152,7 @@
                 coolerInfoElement.appendChild(coolerDiv);
             });
         }
+        
 
         function convertToReadableTime(time) {
             const hours = ((time / 3600000) % 24);
