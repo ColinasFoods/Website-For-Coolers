@@ -173,7 +173,7 @@ fetch('http://localhost:3000/temperature')
     <script>
         var data = [];
         var sensorMap = new Map();
-        var coolerTemps = {};
+        var coolerTemps = new Map();
 
         var colorMap = new Map();
 
@@ -191,7 +191,9 @@ fetch('http://localhost:3000/temperature')
 
                     updateColorMap();
 
-                    updateTemperatureArrays();
+                    console.log(coolerTemps); // Print the temperature values from
+
+                    // updateTemperatureArrays();
 
                     logTemperatureValues();
 
@@ -206,27 +208,39 @@ fetch('http://localhost:3000/temperature')
 
         function updateSensorMap(json) {
             Object.values(json).forEach(element => {
-                var temp = Object.values(element);
-                var sensorId = temp[0];
-                var coolerSensor = new CoolerSensor(temp[1], temp[2], temp[3], temp[4], temp[5]);
+                var sensorId = element.coolerNumber;
+                var coolerSensor = new CoolerSensor(
+                    element.coolerNumber,
+                    element.temperature,
+                    element.doorOpen,
+                    element.doorTimeOpen,
+                    element.previousTemperatures,
+                    element.time
+                );
+                console.log(coolerSensor.time);
+
+                coolerTemps.set(sensorId, element.previousTemperatures);
                 sensorMap.set(sensorId, coolerSensor);
-                coolerTemps[sensorId] = [];
             });
-        }
-        
-        function updateColorMap() {
-            colorMap.set("001", 0x0ad0fd);
-            colorMap.set("010", 0x0f00fd);
-            colorMap.set("021", 0x0cf0fd);
-            colorMap.set("031", 0x02f0fd);
         }
 
-        function updateTemperatureArrays() {
-            sensorMap.forEach((coolerSensor, sensorId) => {
-                var temperatureArray = coolerTemps[sensorId];
-                temperatureArray.push(coolerSensor ? coolerSensor.temp : null);
-            });
+
+
+
+        function updateColorMap() {
+            colorMap.set("001", 0x0ad0fd);
+            colorMap.set("011", 0x0f00fd);
+            colorMap.set("021", 0x0cf0fd);
+            colorMap.set("030", 0x02f0fd);
         }
+
+
+        // function updateTemperatureArrays() {
+        //     sensorMap.forEach((coolerSensor, sensorId) => {
+        //         var temperatureArray = coolerTemps[sensorId];
+        //         temperatureArray.push(coolerSensor ? coolerSensor.temp : null);
+        //     });
+        // }
 
         function logTemperatureValues() {
             Object.entries(coolerTemps).forEach(([sensorId, temperatureArray]) => {
@@ -242,23 +256,29 @@ fetch('http://localhost:3000/temperature')
                 var coolerDiv = document.createElement('div');
                 var tempNum = coolerSensor.temp;
                 coolerDiv.innerHTML = `
-                    <h3>${(coolerNumber%10 == 0 ? "Freezer " : "Cooler " ) + [coolerNumber[0] + coolerNumber[1]]} </h3>
+                    <h3>${(coolerNumber % 10 == 0 ? "Freezer " : "Cooler ") + [coolerNumber[0] + coolerNumber[1]]} </h3>
                     <h4>Latest Temperature: ${tempNum}℃</h4>
                 `;
                 coolerInfoElement.appendChild(coolerDiv);
             });
         }
 
+        function convertToReadableTime(time) {
+            const hours = ((time / 3600000) % 24);
+            return hours > 12 ? Math.round(hours) - 12 : Math.round(hours);
+        }
+
         function createLineChart() {
             var ctx = document.getElementById('chartContainer').getContext('2d');
+            // console.log(convertToReadableTime(sensorMap[0].time));
             new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: data.map(cooler => cooler.time), // Assuming time represents the x-axis values
-                    datasets: Object.entries(coolerTemps).map(([sensorId, temperatureArray], index) => ({
+                    labels: data.map(cooler => convertToReadableTime(cooler.time) ),
+                    datasets: Array.from(coolerTemps.entries()).map(([sensorId, temperatureArray], index) => ({
                         label: `Cooler ${index + 1}`,
                         data: temperatureArray,
-                        backgroundColor: `#${colorMap.get(sensorMap.get(sensorId).id)}`,
+                        backgroundColor: `#${colorMap.get(sensorId).toString(16)}`,
                         borderWidth: 1
                     }))
                 },
@@ -292,6 +312,7 @@ fetch('http://localhost:3000/temperature')
                 }
             });
         }
+
 
         function getRandomRGBValue() {
             return Math.floor(Math.random() * 256);
