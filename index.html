@@ -4,6 +4,8 @@
 <head>
     <title>Cooler Information</title>
     <style type="text/css">
+
+        
         body {
             background-image: url('images/coldwall.jpg');
             background-size: cover;
@@ -55,6 +57,7 @@
 
 
     <canvas id="chartContainer"></canvas>
+    <canvas id="historyChartContainer"></canvas>
     <script src="CoolerSensor.js"> </script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.5.1/dist/chart.js"></script>
     <script src="https://cdn.anychart.com/releases/8.11.0/js/anychart-base.min.js"></script>
@@ -62,37 +65,51 @@
         var data = [];
         var sensorMap = new Map();
         var coolerTemps = new Map();
-
+        var coolerDoors = new Map();
         var colorMap = new Map();
 
         fetchTemperatureData();
 
         function fetchTemperatureData() {
             fetch('http://localhost:3000/temperature')
-                .then(response => response.json())
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
                 .then(json => {
                     console.log(json); // Log the received data to the console
 
                     data = json; // Store the data in the data variable
 
+                    if (!Array.isArray(data)) {
+                        throw new Error('Received data is not an array');
+                    }
+
+                    if (data.length === 0) {
+                        throw new Error('Received data is empty');
+                    }
+
                     updateSensorMap(json); // Update the sensor map with the merged data
 
                     updateColorMap();
 
-                    console.log(coolerTemps); // Print the temperature values from
-
-                    // updateTemperatureArrays();
+                    console.log(coolerTemps); // Print the temperature values
 
                     logTemperatureValues();
 
                     updateHTMLElements();
 
                     createLineChart();
+                    console.log("Data:", data);
+                    //createHistoryChart(); // Move this call inside the .then() block
                 })
                 .catch(error => {
                     console.error('Error fetching data:', error);
                 });
         }
+
 
         function updateSensorMap(json) {
             Object.values(json).forEach(element => {
@@ -103,17 +120,17 @@
                     element.doorOpen,
                     element.doorTimeOpen,
                     element.previousTemperatures,
+                    element.previousDoors,
                     element.time
                 );
                 console.log(coolerSensor.time);
+                console.log("coolerSensor.previousDoors:", coolerSensor.previousDoors);
 
                 coolerTemps.set(sensorId, element.previousTemperatures);
+                coolerDoors.set(sensorId, element.previousDoors);
                 sensorMap.set(sensorId, coolerSensor);
             });
         }
-
-
-
 
         function updateColorMap() {
             colorMap.set("001", 0x0ad0fd);
@@ -143,17 +160,36 @@
                 var coolerNumber = coolerSensor.id;
                 var coolerDiv = document.createElement('div');
                 var tempNum = coolerSensor.temp;
+                var doorOpenDuration = coolerSensor.doorTimeOpen;
+                var doorStatus = coolerSensor.doorOpen ? 'Open' : 'Closed';
                 coolerDiv.innerHTML = `
                     <h3>${(coolerNumber % 10 == 0 ? "Freezer " : "Cooler ") + [coolerNumber[0] + coolerNumber[1]]} </h3>
                     <h4>Latest Temperature: ${tempNum}℃</h4>
+                    <br>
+                    <h4>Door Status: ${doorStatus}</h4>
+                    <h4>Door Open Duration: ${formatDuration(doorOpenDuration)}</h4>
                 `;
                 coolerInfoElement.appendChild(coolerDiv);
             });
         }
 
+        function convertToReadableDateTime(timestamp) {
+            const date = new Date(timestamp);
+            return date.toLocaleString();
+        }
+
+
         function convertToReadableTime(time) {
             const hours = ((time / 3600000) % 24);
             return hours > 12 ? Math.round(hours) - 12 : Math.round(hours);
+        }
+
+        function formatDuration(durationInSeconds) {
+            const hours = Math.floor(durationInSeconds / 3600);
+            const minutes = Math.floor((durationInSeconds % 3600) / 60);
+            const seconds = durationInSeconds % 60;
+
+            return `${hours}h ${minutes}m ${seconds}s`;
         }
 
         function createLineChart() {
@@ -200,6 +236,79 @@
                 }
             });
         }
+
+       /* function createHistoryChart() {
+    var historyCtx = document.getElementById('historyChartContainer').getContext('2d');
+    var coolerData = Array.from(sensorMap.values());
+
+    // Calculate the cumulative duration of door open events
+    var cumulativeDuration = new Array(coolerData[0].previousDoors.length).fill(0);
+    coolerData.forEach((coolerSensor) => {
+        coolerSensor.previousDoors.forEach((doorStatus, doorIndex) => {
+            if (doorStatus === 1) {
+                var prevTimestamp = doorIndex === 0 ? coolerSensor.time : data[doorIndex - 1].time;
+                cumulativeDuration[doorIndex] += (coolerSensor.time - prevTimestamp) / 1000;
+            }
+        });
+    });
+
+    // Create the history chart with the cumulative duration as x-axis labels
+    new Chart(historyCtx, {
+        type: 'line',
+        data: {
+            labels: cumulativeDuration,
+            datasets: coolerData.map((coolerSensor, index) => {
+                var doorOpenDurationData = coolerSensor.previousDoors.map((doorStatus) => {
+                    return doorStatus === 1 ? 1 : 0;
+                });
+
+                return {
+                    label: `Cooler ${index + 1}`,
+                    data: doorOpenDurationData,
+                    borderColor: `#${colorMap.get(coolerSensor.id)}`,
+                    backgroundColor: 'rgba(0, 0, 0, 0)', // Transparent background
+                    borderWidth: 1,
+                    pointRadius: 0 // Hide data points
+                };
+            })
+        },
+        options: {
+            responsive: true,
+            scales: {
+                x: {
+                    display: true,
+                    title: {
+                        display: true,
+                        text: 'Duration (seconds)'
+                    }
+                },
+                y: {
+                    display: true,
+                    title: {
+                        display: true,
+                        text: 'Door Open Duration (seconds)'
+                    },
+                    ticks: {
+                        stepSize: 1 // Display only integer values on the y-axis
+                    }
+                }
+            },
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Door Open Duration History',
+                    font: {
+                        size: 20
+                    }
+                }
+            }
+        }
+    });
+}
+*/
+
+
+
 
 
         function getRandomRGBValue() {
